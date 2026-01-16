@@ -6,6 +6,9 @@ export interface AppConfiguration {
     tcpHost: string;
     tcpPort: number;
   };
+  mongo: {
+    uri: string;
+  };
 }
 
 function asInt(value: string | undefined, fallback: number): number {
@@ -20,6 +23,9 @@ export const configuration = (): AppConfiguration => ({
   auth: {
     tcpHost: process.env.AUTH_TCP_HOST ?? "127.0.0.1",
     tcpPort: asInt(process.env.AUTH_TCP_PORT, 4001),
+  },
+  mongo: {
+    uri: process.env.MONGO_URI ?? "mongodb://127.0.0.1:27017/authentication",
   },
 });
 

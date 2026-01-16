@@ -1,6 +1,7 @@
 # nest-next-project
 
 NestJS monorepo skeleton with:
+
 - `apps/gateway`: HTTP gateway (Swagger + validation) that talks to authentication over TCP
 - `apps/authentication`: TCP microservice (no HTTP) that responds to a ping message
 
@@ -11,20 +12,21 @@ NestJS monorepo skeleton with:
 
 ## Setup
 
-1) Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2) Create your environment file (Cursor tooling may block committing dotfiles, so create this manually):
+2. Create your environment file
 
-- Copy `env.example` to `.env` and edit values if needed.
-
-Example:
+Create `.env` at the repo root (it is gitignored). Suggested contents:
 
 ```bash
-cp env.example .env
+GATEWAY_HTTP_PORT=3000
+AUTH_TCP_HOST=127.0.0.1
+AUTH_TCP_PORT=4001
+MONGO_URI=mongodb://127.0.0.1:27017/authentication
 ```
 
 ## Run locally (2 terminals)
@@ -57,6 +59,19 @@ curl -s http://localhost:3000/health
 curl -s http://localhost:3000/auth/ping
 ```
 
+- Register a user:
+
+```bash
+curl -s -X POST http://localhost:3000/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+- List users:
+
+```bash
+curl -s http://localhost:3000/auth/users
+```
+
 - Swagger UI:
   - `http://localhost:3000/api`
-
