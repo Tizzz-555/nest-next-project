@@ -45,6 +45,19 @@ npm run start:gateway:dev
 
 Gateway will listen on `http://localhost:3000` by default.
 
+## Run with Docker Compose
+
+Build and start everything (MongoDB + authentication + gateway):
+
+```bash
+docker compose up --build
+```
+
+Then verify (from your host machine):
+- `curl -s http://localhost:3000/health`
+- `curl -s http://localhost:3000/auth/ping`
+- `curl -s http://localhost:3000/auth/users`
+
 ## Verify
 
 - Gateway health:

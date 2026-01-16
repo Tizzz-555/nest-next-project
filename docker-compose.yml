@@ -1,0 +1,40 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: nest-next-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  authentication:
+    container_name: nest-next-authentication
+    build:
+      context: .
+      dockerfile: apps/authentication/Dockerfile
+    environment:
+      AUTH_TCP_HOST: 0.0.0.0
+      AUTH_TCP_PORT: 4001
+      MONGO_URI: mongodb://mongo:27017/authentication
+    depends_on:
+      - mongo
+    ports:
+      - "4001:4001"
+
+  gateway:
+    container_name: nest-next-gateway
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    environment:
+      GATEWAY_HTTP_PORT: 3000
+      AUTH_TCP_HOST: authentication
+      AUTH_TCP_PORT: 4001
+    depends_on:
+      - authentication
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
+
