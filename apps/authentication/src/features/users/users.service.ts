@@ -27,7 +27,22 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const created = await this.usersRepo.createUser({ email, passwordHash });
+
+    let created;
+    try {
+      created = await this.usersRepo.createUser({ email, passwordHash });
+    } catch (err) {
+      // Race condition protection: concurrent requests can both pass the pre-check and then
+      // one of them hits MongoDB duplicate key error (E11000 / code 11000).
+      if (isDuplicateEmailMongoError(err)) {
+        const svcErr: ServiceError = {
+          code: ERROR_CODES.USER_EMAIL_EXISTS,
+          message: "Email already exists",
+        };
+        throw new RpcException(svcErr);
+      }
+      throw err;
+    }
 
     return { user: this.toUserRto(created) };
   }
@@ -46,3 +61,23 @@ export class UsersService {
   }
 }
 
+function isDuplicateEmailMongoError(err: unknown): boolean {
+  // MongoServerError shape varies by driver version; we check the widely stable bits.
+  const anyErr = err as {
+    code?: unknown;
+    message?: unknown;
+    keyPattern?: unknown;
+    keyValue?: unknown;
+  };
+
+  if (anyErr?.code !== 11000) return false;
+
+  const msg = typeof anyErr.message === "string" ? anyErr.message : "";
+  const keyPattern = anyErr.keyPattern as Record<string, unknown> | undefined;
+  const keyValue = anyErr.keyValue as Record<string, unknown> | undefined;
+
+  // Prefer structured fields if present; fallback to message scan.
+  if (keyPattern && "email" in keyPattern) return true;
+  if (keyValue && "email" in keyValue) return true;
+  return msg.includes("E11000") && msg.includes("email");
+}

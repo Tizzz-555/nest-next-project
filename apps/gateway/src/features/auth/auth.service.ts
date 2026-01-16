@@ -2,30 +2,30 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { firstValueFrom, timeout } from "rxjs";
 
 import { TCP_PATTERNS } from "../../../../../common/constants/tcp-patterns";
-import { AUTHENTICATION_CLIENT } from "../../core/clients/authentication.client";
-import type { RegisterUserDto } from "../../../../../common/dto/auth/register-user.dto";
-import type { RegisterUserRto } from "../../../../../common/rto/auth/register-user.rto";
-import type { ListUsersRto } from "../../../../../common/rto/auth/list-users.rto";
 import { ERROR_CODES } from "../../../../../common/errors/error-codes";
-import type { ServiceError } from "../../../../../common/errors/service-error";
+import type { RegisterUserDto } from "../../../../../common/dto/auth/register-user.dto";
+import type { ListUsersRto } from "../../../../../common/rto/auth/list-users.rto";
+import type { RegisterUserRto } from "../../../../../common/rto/auth/register-user.rto";
+import { AUTHENTICATION_CLIENT } from "../../core/clients/authentication.client";
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(AUTHENTICATION_CLIENT) private readonly client: ClientProxy,
+    @Inject(AUTHENTICATION_CLIENT) private readonly client: ClientProxy
   ) {}
 
   async pingAuthenticationService(): Promise<unknown> {
     try {
       const res$ = this.client.send(TCP_PATTERNS.ping, {});
       return await firstValueFrom(res$.pipe(timeout(2000)));
-    } catch (err) {
+    } catch {
       throw new ServiceUnavailableException({
         message: "Authentication service is unavailable",
       });
@@ -34,11 +34,16 @@ export class AuthService {
 
   async register(dto: RegisterUserDto): Promise<RegisterUserRto> {
     try {
-      const res$ = this.client.send<RegisterUserRto>(TCP_PATTERNS.registerUser, dto);
+      const res$ = this.client.send<RegisterUserRto>(
+        TCP_PATTERNS.registerUser,
+        dto
+      );
       return await firstValueFrom(res$.pipe(timeout(5000)));
     } catch (err) {
       this.mapServiceError(err);
-      throw err;
+      throw new InternalServerErrorException({
+        message: "Authentication service error",
+      });
     }
   }
 
@@ -48,18 +53,37 @@ export class AuthService {
       return await firstValueFrom(res$.pipe(timeout(5000)));
     } catch (err) {
       this.mapServiceError(err);
-      throw err;
+      throw new InternalServerErrorException({
+        message: "Authentication service error",
+      });
     }
   }
 
   private mapServiceError(err: unknown): void {
-    // Nest microservices wrap RpcException payloads; commonly available on `err.error`.
-    const payload = (err as { error?: unknown })?.error as Partial<ServiceError> | undefined;
-    if (!payload?.code) return;
+    const e = err as any;
 
-    if (payload.code === ERROR_CODES.USER_EMAIL_EXISTS) {
-      throw new ConflictException({ message: payload.message ?? "Email already exists" });
+    if (e?.name === "TimeoutError") {
+      throw new ServiceUnavailableException({
+        message: "Authentication service timed out",
+      });
+    }
+
+    const code: string | undefined =
+      (typeof e?.code === "string" ? e.code : undefined) ??
+      (typeof e?.error?.code === "string" ? e.error.code : undefined) ??
+      (typeof e?.message?.code === "string" ? e.message.code : undefined);
+
+    const message: string | undefined =
+      (typeof e?.message === "string" ? e.message : undefined) ??
+      (typeof e?.error?.message === "string" ? e.error.message : undefined) ??
+      (typeof e?.message?.message === "string" ? e.message.message : undefined);
+
+    if (!code) return;
+
+    if (code === ERROR_CODES.USER_EMAIL_EXISTS) {
+      throw new ConflictException({
+        message: message ?? "Email already exists",
+      });
     }
   }
 }
-
