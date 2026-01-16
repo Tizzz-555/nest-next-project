@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/apps/authentication",
+    "rootDir": "../.."
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../common/**/*.ts",
+    "../../config/**/*.ts",
+    "../../core/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+}
