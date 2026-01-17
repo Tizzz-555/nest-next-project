@@ -94,6 +94,27 @@ npm run dev:web
 - **Gateway Health**: `http://localhost:3000/health`
 - **Web App**: `http://localhost:3001`
 
+## Deployed demo (frontend)
+
+- **Vercel (Web)**: `https://nest-next-project-jedu6wf8p-tizzz-555s-projects.vercel.app` (example page: `/users`)
+
+Note: this deployment is **frontend-only**. The app expects the gateway at `NEXT_PUBLIC_GATEWAY_BASE_URL` (defaults to `http://localhost:3000`), so API actions require running the backend locally (see Docker/Postman sections above).
+
+## Postman collection (API demo)
+
+Import these files into Postman:
+
+- `postman/nest-next-project.postman_collection.json`
+- `postman/local.postman_environment.json`
+
+Then select the environment **"nest-next-project (local)"** and run requests in this order:
+
+1. **Health - Gateway**
+2. **Auth - Ping**
+3. **Auth - Register**
+4. **Auth - Login (sets accessToken)** (saves `accessToken` into the environment)
+5. **Auth - List Users (Bearer accessToken)**
+
 ## Scripts
 
 - **Backend dev (gateway + auth)**: `npm run start:dev`
