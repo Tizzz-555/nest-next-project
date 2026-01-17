@@ -20,13 +20,35 @@ npm install
 
 2. Create your environment file
 
-Create `.env` at the repo root (it is gitignored). Suggested contents:
+Create `.env` at the repo root (it is gitignored). Required contents:
 
 ```bash
 GATEWAY_HTTP_PORT=3000
 AUTH_TCP_HOST=127.0.0.1
 AUTH_TCP_PORT=4001
 MONGO_URI=mongodb://127.0.0.1:27017/authentication
+
+# JWT (RS256)
+# These are required in all environments (strict configuration).
+JWT_ISSUER=nest-next-project
+JWT_AUDIENCE=gateway
+JWT_ACCESS_TOKEN_TTL_SECONDS=3600
+JWT_PUBLIC_KEY_BASE64=...
+JWT_PRIVATE_KEY_BASE64=...
+```
+
+### Generate RS256 keys (base64-encoded PEM)
+
+Generate a private key + matching public key, then base64-encode each PEM (so they fit in `.env` without multiline issues):
+
+```bash
+# generate keys
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out jwt-private.pem
+openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
+
+# base64 encode PEMs (copy the output into .env)
+base64 < jwt-private.pem
+base64 < jwt-public.pem
 ```
 
 ## Run locally (2 terminals)
@@ -54,9 +76,10 @@ docker compose up --build
 ```
 
 Then verify (from your host machine):
+
 - `curl -s http://localhost:3000/health`
 - `curl -s http://localhost:3000/auth/ping`
-- `curl -s http://localhost:3000/auth/users`
+- `curl -s http://localhost:3000/auth/users` (requires Authorization header)
 
 ## Verify
 
@@ -83,7 +106,16 @@ curl -s -X POST http://localhost:3000/auth/register \
 - List users:
 
 ```bash
-curl -s http://localhost:3000/auth/users
+curl -s -X POST http://localhost:3000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+Then call a protected route (replace `$TOKEN`):
+
+```bash
+curl -s http://localhost:3000/auth/users \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 - Swagger UI:

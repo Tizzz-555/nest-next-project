@@ -10,6 +10,7 @@ import { UsersService } from "./users.service";
   imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
   controllers: [UsersMessageController],
   providers: [UsersRepository, UsersService],
+  exports: [UsersRepository],
 })
 export class UsersModule {}
 

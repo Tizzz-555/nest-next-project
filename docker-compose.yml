@@ -16,6 +16,11 @@ services:
       AUTH_TCP_HOST: 0.0.0.0
       AUTH_TCP_PORT: 4001
       MONGO_URI: mongodb://mongo:27017/authentication
+      JWT_ISSUER: ${JWT_ISSUER?JWT_ISSUER is required}
+      JWT_AUDIENCE: ${JWT_AUDIENCE?JWT_AUDIENCE is required}
+      JWT_ACCESS_TOKEN_TTL_SECONDS: ${JWT_ACCESS_TOKEN_TTL_SECONDS?JWT_ACCESS_TOKEN_TTL_SECONDS is required}
+      JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64?JWT_PUBLIC_KEY_BASE64 is required}
+      JWT_PRIVATE_KEY_BASE64: ${JWT_PRIVATE_KEY_BASE64?JWT_PRIVATE_KEY_BASE64 is required}
     depends_on:
       - mongo
     ports:
@@ -30,6 +35,9 @@ services:
       GATEWAY_HTTP_PORT: 3000
       AUTH_TCP_HOST: authentication
       AUTH_TCP_PORT: 4001
+      JWT_ISSUER: ${JWT_ISSUER?JWT_ISSUER is required}
+      JWT_AUDIENCE: ${JWT_AUDIENCE?JWT_AUDIENCE is required}
+      JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64?JWT_PUBLIC_KEY_BASE64 is required}
     depends_on:
       - authentication
     ports:

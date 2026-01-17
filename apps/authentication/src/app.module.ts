@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 
 import { AppConfigModule } from "../../../config/config.module";
 import { SystemModule } from "./features/system/system.module";
+import { AuthModule } from "./features/auth/auth.module";
 import { UsersModule } from "./features/users/users.module";
 
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from "./features/users/users.module";
       }),
     }),
     SystemModule,
+    AuthModule,
     UsersModule,
   ],
 })
