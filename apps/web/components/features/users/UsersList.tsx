@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Button, Card, CardContent } from "@/components/ui";
 import { listUsers } from "@/lib/api/auth";
-import { hasAccessToken } from "@/lib/auth/tokenStorage";
+import { clearAccessToken, hasAccessToken } from "@/lib/auth/tokenStorage";
 import { GatewayApiError } from "@/lib/api/gatewayClient";
 import type { UserRto } from "@/types/api/auth";
 
@@ -37,6 +37,7 @@ export function UsersList() {
       setStatus("error");
       if (err instanceof GatewayApiError) {
         if (err.statusCode === 401) {
+          clearAccessToken();
           setIsUnauthorized(true);
           setError("Your session has expired. Please sign in again.");
         } else {
@@ -203,9 +204,16 @@ export function UsersList() {
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
           {users.length} user{users.length !== 1 ? "s" : ""} found
         </p>
-        <Button variant="secondary" size="sm" onClick={fetchUsers}>
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={fetchUsers}>
+            Refresh
+          </Button>
+          {hasAccessToken() && (
+            <Button variant="destructive" size="sm" onClick={handleLogout}>
+              Logout
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
