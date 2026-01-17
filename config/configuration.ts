@@ -6,6 +6,13 @@ export interface AppConfiguration {
     tcpHost: string;
     tcpPort: number;
   };
+  jwt: {
+    issuer: string;
+    audience: string;
+    accessTokenTtlSeconds: number;
+    publicKeyBase64: string;
+    privateKeyBase64: string;
+  };
   mongo: {
     uri: string;
   };
@@ -23,6 +30,14 @@ export const configuration = (): AppConfiguration => ({
   auth: {
     tcpHost: process.env.AUTH_TCP_HOST ?? "127.0.0.1",
     tcpPort: asInt(process.env.AUTH_TCP_PORT, 4001),
+  },
+  jwt: {
+    // Strict: require explicit configuration (no defaults).
+    issuer: process.env.JWT_ISSUER ?? "",
+    audience: process.env.JWT_AUDIENCE ?? "",
+    accessTokenTtlSeconds: asInt(process.env.JWT_ACCESS_TOKEN_TTL_SECONDS, 0),
+    publicKeyBase64: process.env.JWT_PUBLIC_KEY_BASE64 ?? "",
+    privateKeyBase64: process.env.JWT_PRIVATE_KEY_BASE64 ?? "",
   },
   mongo: {
     uri: process.env.MONGO_URI ?? "mongodb://127.0.0.1:27017/authentication",
