@@ -10,7 +10,10 @@
     "start:gateway:dev": "nest start gateway --watch",
     "start:authentication": "nest start authentication",
     "start:authentication:dev": "nest start authentication --watch",
-    "start:dev": "concurrently -n gateway,authentication -c blue,magenta \"npm run start:gateway:dev\" \"npm run start:authentication:dev\""
+    "start:dev": "concurrently -n gateway,authentication -c blue,magenta \"npm run start:gateway:dev\" \"npm run start:authentication:dev\"",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build:web": "npm run build --prefix apps/web",
+    "start:web": "npm run start --prefix apps/web"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
