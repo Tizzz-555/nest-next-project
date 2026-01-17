@@ -1,26 +1,26 @@
-# nest-next-project
+# Nest + Next Monorepo (Gateway + Auth Microservice + Web)
 
-NestJS monorepo skeleton with:
+Full-stack monorepo featuring:
 
-- `apps/gateway`: HTTP gateway (Swagger + validation) that talks to authentication over TCP
-- `apps/authentication`: TCP microservice (no HTTP) that responds to a ping message
+- **NestJS Gateway (`apps/gateway`)**: HTTP API with Swagger + validation. It **does not access the database**.
+- **NestJS Authentication (`apps/authentication`)**: TCP microservice with business logic + persistence (MongoDB/Mongoose).
+- **Next.js Web (`apps/web`)**: App Router frontend that talks to the gateway only.
 
-## Prerequisites
+## Architecture overview
 
-- Node.js (recommended: 20+)
-- npm
+- **HTTP**: Next.js → Gateway (`http://localhost:3000`)
+- **Internal**: Gateway → Authentication over **TCP** (`AUTH_TCP_HOST:AUTH_TCP_PORT`)
+- **Database**: Authentication → MongoDB (`MONGO_URI`)
 
-## Setup
+## Requirements
 
-1. Install dependencies:
+- **Node.js**: 20+ recommended
+- **npm**
+- **Docker** (optional, for running MongoDB/services via Compose)
 
-```bash
-npm install
-```
+## Configuration
 
-2. Create your environment file
-
-Create `.env` at the repo root (it is gitignored). Required contents:
+Create a `.env` file at the repo root (it’s gitignored). Minimum required:
 
 ```bash
 GATEWAY_HTTP_PORT=3000
@@ -29,7 +29,6 @@ AUTH_TCP_PORT=4001
 MONGO_URI=mongodb://127.0.0.1:27017/authentication
 
 # JWT (RS256)
-# These are required in all environments (strict configuration).
 JWT_ISSUER=nest-next-project
 JWT_AUDIENCE=gateway
 JWT_ACCESS_TOKEN_TTL_SECONDS=3600
@@ -39,84 +38,67 @@ JWT_PRIVATE_KEY_BASE64=...
 
 ### Generate RS256 keys (base64-encoded PEM)
 
-Generate a private key + matching public key, then base64-encode each PEM (so they fit in `.env` without multiline issues):
-
 ```bash
-# generate keys
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out jwt-private.pem
 openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
 
-# base64 encode PEMs (copy the output into .env)
+# copy these outputs into .env
 base64 < jwt-private.pem
 base64 < jwt-public.pem
 ```
 
-## Run locally (2 terminals)
+## Install
 
-Terminal 1 (authentication microservice):
+```bash
+npm install
+```
+
+## Run (development)
+
+### Backend (gateway + authentication)
+
+Run both Nest services together:
+
+```bash
+npm run start:dev
+```
+
+Or run them separately:
 
 ```bash
 npm run start:authentication:dev
-```
-
-Terminal 2 (gateway HTTP server):
-
-```bash
 npm run start:gateway:dev
 ```
 
-Gateway will listen on `http://localhost:3000` by default.
+### Web (Next.js)
 
-## Run with Docker Compose
+```bash
+npm run dev:web
+```
 
-Build and start everything (MongoDB + authentication + gateway):
+## Run with Docker Compose (MongoDB + backend)
 
 ```bash
 docker compose up --build
 ```
 
-Then verify (from your host machine):
-
-- `curl -s http://localhost:3000/health`
-- `curl -s http://localhost:3000/auth/ping`
-- `curl -s http://localhost:3000/auth/users` (requires Authorization header)
-
-## Verify
-
-- Gateway health:
+Then run the web app locally:
 
 ```bash
-curl -s http://localhost:3000/health
+npm run dev:web
 ```
 
-- Ping authentication service via TCP through gateway:
+## Useful URLs
 
-```bash
-curl -s http://localhost:3000/auth/ping
-```
+- **Gateway Swagger**: `http://localhost:3000/api`
+- **Gateway Health**: `http://localhost:3000/health`
+- **Web App**: `http://localhost:3001`
 
-- Register a user:
+## Scripts
 
-```bash
-curl -s -X POST http://localhost:3000/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"test@example.com","password":"password123"}'
-```
-
-- List users:
-
-```bash
-curl -s -X POST http://localhost:3000/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"test@example.com","password":"password123"}'
-```
-
-Then call a protected route (replace `$TOKEN`):
-
-```bash
-curl -s http://localhost:3000/auth/users \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-- Swagger UI:
-  - `http://localhost:3000/api`
+- **Backend dev (gateway + auth)**: `npm run start:dev`
+- **Gateway dev**: `npm run start:gateway:dev`
+- **Auth dev**: `npm run start:authentication:dev`
+- **Web dev**: `npm run dev:web`
+- **Build backend**: `npm run build`
+- **Build web**: `npm run build:web`
