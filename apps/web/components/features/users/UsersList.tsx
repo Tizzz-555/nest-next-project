@@ -49,6 +49,13 @@ export function UsersList() {
     }
   }, []);
 
+  const handleLogout = useCallback(() => {
+    clearAccessToken();
+    setUsers([]);
+    // Trigger the "Authentication required" state
+    fetchUsers();
+  }, [fetchUsers]);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
