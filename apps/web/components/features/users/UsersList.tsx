@@ -16,12 +16,6 @@ export function UsersList() {
   const [error, setError] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
-  const handleLogout = () => {
-    clearAccessToken();
-    setUsers([]);
-    fetchUsers();
-  };
-
   const fetchUsers = useCallback(async () => {
     // Check if we have a token before making the request
     if (!hasAccessToken()) {

@@ -1,0 +1,108 @@
+# Full-Stack NestJS + Next.js Monorepo Rules
+
+## Architecture Constraints (MUST FOLLOW)
+
+### Backend Structure
+
+- This is a NestJS monorepo using apps/ structure
+- apps/gateway contains ALL HTTP controllers and endpoints (no database access here)
+- apps/authentication contains business logic + persistence (MongoDB/Mongoose)
+- Internal gateway↔authentication communication MUST use @nestjs/microservices over TCP
+- Use MVC pattern per feature: Controller → Service → Repository
+- Keep modules small and feature-oriented
+
+### Communication Patterns
+
+- Gateway receives HTTP requests and forwards to authentication service via TCP
+- Authentication service handles all database operations
+- Use DTOs (Data Transfer Objects) for requests with class-validator
+- Use RTOs (Response Transfer Objects) for structured responses
+- All validation happens at gateway level before TCP communication
+
+### Frontend Structure
+
+- Next.js 14+ with App Router
+- Use React 18 with server and client components appropriately
+- UI component library in a dedicated folder (e.g., components/ui/)
+- Pages consume gateway endpoints only (never call authentication service directly)
+- Proper state handling: loading, error, and success states
+
+## Code Quality Standards
+
+### TypeScript
+
+- Prefer explicit types, avoid `any`
+- Use interfaces for DTOs/RTOs
+- Enable strict mode in tsconfig.json
+
+### NestJS Best Practices
+
+- Add Swagger decorators (@ApiTags, @ApiOperation, @ApiResponse) in gateway controllers
+- Use global validation pipes with class-validator
+- Implement consistent error handling and mapping
+- Keep configuration in config/ folder and load via ConfigModule
+- Use dependency injection properly
+
+### React/Next.js Best Practices
+
+- Use TypeScript for all components
+- Implement proper prop types/interfaces
+- Add accessibility attributes (aria-\*, role, etc.)
+- Ensure components are responsive (mobile-first approach)
+- Use proper error boundaries where needed
+
+### Validation & Error Handling
+
+- Validation errors → 400 Bad Request
+- Duplicate/conflict errors → 409 Conflict
+- Not found → 404 Not Found
+- Server errors → 500 Internal Server Error
+- Return consistent error response format
+
+## File Organization
+
+### Backend
+
+- DTOs in dto/ folders within feature modules
+- RTOs in rto/ folders or alongside DTOs
+- Services contain business logic
+- Repositories handle data access
+- Controllers only handle HTTP concerns (gateway) or message patterns (microservices)
+
+### Frontend
+
+- Reusable UI components in components/ui/
+- Feature-specific components in components/features/
+- API client functions in lib/api/ or services/
+- Types/interfaces in types/ or alongside components
+
+## Workflow Guidelines
+
+- Before implementing large features: outline files to create/modify and acceptance criteria
+- Update README.md when adding new setup steps or dependencies
+- Keep commits focused and meaningful
+- Add comments for complex business logic or architectural decisions
+
+## Dependencies & Tools
+
+### Backend
+
+- @nestjs/microservices for TCP communication
+- class-validator and class-transformer for validation
+- @nestjs/swagger for API documentation
+- mongoose for MongoDB (or chosen database)
+- @nestjs/config for configuration management
+
+### Frontend
+
+- Next.js 14+ (App Router)
+- React 18
+- TailwindCSS for styling (or CSS Modules)
+- ESLint and Prettier configured
+
+## Testing & Documentation
+
+- Add Swagger documentation for all public endpoints
+- Include JSDoc comments for complex functions
+- Update README with setup instructions when adding new features
+- Consider adding health check endpoints for monitoring
