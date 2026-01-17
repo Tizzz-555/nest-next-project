@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 
 import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "../../core/auth/jwt-auth.guard";
+import { LoginUserDto } from "../../../../../common/dto/auth/login-user.dto";
 import { RegisterUserDto } from "../../../../../common/dto/auth/register-user.dto";
+import type { LoginUserRto } from "../../../../../common/rto/auth/login-user.rto";
 import type { ListUsersRto } from "../../../../../common/rto/auth/list-users.rto";
 import type { RegisterUserRto } from "../../../../../common/rto/auth/register-user.rto";
 
@@ -31,9 +34,22 @@ export class AuthController {
     return await this.authService.register(dto);
   }
 
+  @Post("login")
+  @ApiOperation({ summary: "Login and receive an access token" })
+  @ApiBody({ type: LoginUserDto })
+  @ApiResponse({ status: 200, description: "Logged in" })
+  @ApiResponse({ status: 400, description: "Validation error" })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  async login(@Body() dto: LoginUserDto): Promise<LoginUserRto> {
+    return await this.authService.login(dto);
+  }
+
   @Get("users")
   @ApiOperation({ summary: "List all users" })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: "Users list" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   async listUsers(): Promise<ListUsersRto> {
     return await this.authService.listUsers();
   }

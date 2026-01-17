@@ -4,13 +4,16 @@ import {
   Injectable,
   InternalServerErrorException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { firstValueFrom, timeout } from "rxjs";
 
 import { TCP_PATTERNS } from "../../../../../common/constants/tcp-patterns";
 import { ERROR_CODES } from "../../../../../common/errors/error-codes";
+import type { LoginUserDto } from "../../../../../common/dto/auth/login-user.dto";
 import type { RegisterUserDto } from "../../../../../common/dto/auth/register-user.dto";
+import type { LoginUserRto } from "../../../../../common/rto/auth/login-user.rto";
 import type { ListUsersRto } from "../../../../../common/rto/auth/list-users.rto";
 import type { RegisterUserRto } from "../../../../../common/rto/auth/register-user.rto";
 import { AUTHENTICATION_CLIENT } from "../../core/clients/authentication.client";
@@ -38,6 +41,18 @@ export class AuthService {
         TCP_PATTERNS.registerUser,
         dto
       );
+      return await firstValueFrom(res$.pipe(timeout(5000)));
+    } catch (err) {
+      this.mapServiceError(err);
+      throw new InternalServerErrorException({
+        message: "Authentication service error",
+      });
+    }
+  }
+
+  async login(dto: LoginUserDto): Promise<LoginUserRto> {
+    try {
+      const res$ = this.client.send<LoginUserRto>(TCP_PATTERNS.loginUser, dto);
       return await firstValueFrom(res$.pipe(timeout(5000)));
     } catch (err) {
       this.mapServiceError(err);
@@ -83,6 +98,12 @@ export class AuthService {
     if (code === ERROR_CODES.USER_EMAIL_EXISTS) {
       throw new ConflictException({
         message: message ?? "Email already exists",
+      });
+    }
+
+    if (code === ERROR_CODES.INVALID_CREDENTIALS) {
+      throw new UnauthorizedException({
+        message: message ?? "Invalid credentials",
       });
     }
   }

@@ -22,6 +22,7 @@ async function bootstrap(): Promise<void> {
     .setTitle("Gateway API")
     .setDescription("HTTP gateway for internal microservices")
     .setVersion("0.1.0")
+    .addBearerAuth()
     .addTag("Auth")
     .addTag("Health")
     .build();
