@@ -1,0 +1,30 @@
+**/node_modules
+dist
+.next
+**/.next
+coverage
+**/coverage
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# VCS / editor
+.git
+.github
+.DS_Store
+.vscode
+.idea
+
+# Env / secrets
+.env
+.env.*
+
+# Misc
+tmp
+**/tmp
+*.swp
+*.swo

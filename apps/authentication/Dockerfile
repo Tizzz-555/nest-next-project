@@ -2,14 +2,16 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json nest-cli.json tsconfig.json tsconfig.base.json ./
-COPY apps ./apps
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY nest-cli.json tsconfig.json tsconfig.base.json ./
+COPY apps/authentication ./apps/authentication
 COPY common ./common
 COPY config ./config
 COPY core ./core
 
-RUN npm ci
-RUN npm run build
+RUN npx nest build authentication
 
 FROM node:20-alpine
 
@@ -18,9 +20,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && npm cache clean --force
 
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist/apps/authentication ./dist/apps/authentication
 
 EXPOSE 4001
 
